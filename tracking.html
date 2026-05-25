@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking | Universitas Terbuka</title>
+    
+    <!-- Vue 3 and Tailwind CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003d79',
+                        'primary-container': '#002b56',
+                        secondary: '#fdb913',
+                        'secondary-container': '#fdb913',
+                        accent: '#fdb913'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Public Sans', 'sans-serif'],
+                        body: ['Inter', 'Lexend', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-[#f8fafc] dark:bg-slate-950 font-body text-[#181c1e] dark:text-slate-100 min-h-screen transition-colors duration-300">
+
+  <div id="app" class="flex min-h-screen flex-col md:flex-row">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar-menu" class="sidebar bg-primary dark:bg-slate-900 shadow-xl z-50 transition-colors duration-300">
+        <div class="p-6 border-b border-blue-900 bg-blue-950/20 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-black text-[10px] border-2 border-accent ut-logo-placeholder"></div>
+                <div>
+                    <div class="font-bold text-sm tracking-tight text-white sidebar-title">UT-Daerah</div>
+                    <div class="text-[10px] text-blue-300 font-bold uppercase tracking-widest leading-none mt-1">Logistik Bahan Ajar</div>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 py-6 px-4 space-y-1">
+            <button onclick="window.location.href='dashboard.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </button>
+            <button onclick="window.location.href='pesanan.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                Pesanan
+            </button>
+            <button id="nav-stok" onclick="window.location.href='stok.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">inventory_2</span>
+                Informasi Stok
+            </button>
+            <button id="nav-tracking" onclick="window.location.href='tracking.html'" class="w-full text-left p-3 bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-bold text-white border-l-4 border-accent">
+                <span class="material-symbols-outlined text-accent">local_shipping</span>
+                Tracking Pengiriman
+            </button>
+            <button id="nav-laporan" v-if="isAdmin" onclick="window.location.href='laporan.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">report_problem</span>
+                Laporan Masalah
+            </button>
+            <button id="nav-histori" v-if="isAdmin" onclick="window.location.href='histori.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">history</span>
+                Histori Pengiriman
+            </button>
+        </nav>
+        <div class="p-4 border-t border-blue-900">
+            <button @click="logout" class="w-full p-2 bg-red-600/20 hover:bg-red-650 text-red-400 hover:text-white transition-all text-xs font-bold rounded flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                KELUAR
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-content flex flex-col min-h-screen flex-grow w-full overflow-x-hidden">
+        <!-- Header -->
+        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors">
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('sidebar-menu').classList.toggle('active')" class="md:hidden p-2">
+                    <span class="material-symbols-outlined dark:text-white">menu</span>
+                </button>
+                <div class="text-slate-700 dark:text-white font-black text-base font-sans uppercase tracking-wider">Pusat Tracking Pengiriman</div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-4 ml-auto">
+                <!-- Notifications panel -->
+                <div class="relative">
+                    <button @click="showNotifBox = !showNotifBox" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors relative" title="Notifikasi">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span v-if="notifications.length > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce"></span>
+                    </button>
+                    <!-- Notification Dropdown -->
+                    <div v-show="showNotifBox" class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 shadow-2xl border border-slate-200 dark:border-slate-700 rounded-xl z-50 overflow-hidden" style="display: none;">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                            <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Log Notifikasi</span>
+                            <button @click="clearNotifications" class="text-[10px] text-blue-600 dark:text-accent font-bold hover:underline">Hapus Semua</button>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto p-4 space-y-3">
+                            <div v-if="notifications.length === 0" class="text-center py-6 text-slate-400">
+                                <span class="material-symbols-outlined text-3xl mb-1">notifications_off</span>
+                                <p class="text-[10px]">Tidak ada notifikasi baru.</p>
+                            </div>
+                            <div v-for="(n, idx) in notifications" :key="idx" class="border-b dark:border-slate-700 pb-2 text-xs">
+                                <p class="text-slate-700 dark:text-slate-300 font-medium leading-tight">{{ n.text }}</p>
+                                <span class="text-[9px] text-slate-400 font-bold font-mono">{{ n.time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button @click="toggleTheme" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors" title="Ganti Tema">
+                    <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+                </button>
+
+                <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block"></div>
+
+                <div class="flex items-center gap-3 pl-1">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-bold text-slate-800 dark:text-white">{{ userName }}</p>
+                        <p class="text-[9px] text-yellow-600 dark:text-accent font-bold uppercase tracking-wider">{{ userRole }} Portal</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-accent text-primary flex items-center justify-center font-black text-sm ring-2 ring-white dark:ring-slate-800 shadow-sm transition-transform hover:scale-105 cursor-pointer">
+                        {{ userInitial }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow p-4 sm:p-8 max-w-5xl mx-auto w-full space-y-8">
+            <!-- Form Input Delivery Order (ONLY SHOWN FOR OPERATORS/ADMINS) -->
+            <section v-if="userRole === 'Admin' || userRole === 'UPBJJ-UT' || userRole === 'Puslaba' || userRole === 'Fakultas' || userRole === 'Administrator'" class="card p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg border-t-4 border-t-accent animate-in slide-in-from-top-4 duration-300">
+                <h2 class="text-xs font-black font-sans text-primary dark:text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined">bookmark_add</span>
+                    Pembuatan Delivery Order (DO) Baru
+                </h2>
+                
+                <form @submit.prevent="createNewDelivery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- NIM -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">NIM Mahasiswa *</label>
+                        <input type="text" v-model="nim" placeholder="Masukkan 9 Digit NIM..." class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary font-mono">
+                        <span v-if="formErrors.nim" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.nim }}</span>
+                    </div>
+
+                    <!-- NAMA MAHASISWA -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nama Lengkap Mahasiswa *</label>
+                        <input type="text" v-model="nama" placeholder="Masukkan nama..." class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                        <span v-if="formErrors.nama" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.nama }}</span>
+                    </div>
+
+                    <!-- TANGGAL KIRIM -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tanggal Kirim *</label>
+                        <input type="date" v-model="tanggalKirim" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary font-mono">
+                    </div>
+
+                    <!-- UT DAERAH (UPBJJ) -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">UT-Daerah (UPBJJ) *</label>
+                        <select v-model="selectedUPBJJ" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">-- Pilih UT Daerah --</option>
+                            <option v-for="u in upbjjs" :key="u.id" :value="u.id">{{ u.nama }}</option>
+                        </select>
+                        <span v-if="formErrors.upbjj" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.upbjj }}</span>
+                    </div>
+
+                    <!-- EKSPEDISI (Dependent on UPBJJ selection) -->
+                    <div class="space-y-1 flex flex-col justify-end">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ekspedisi Cargo *</label>
+                        <select v-model="ekspedisi" :disabled="!selectedUPBJJ" class="w-full bg-slate-55 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                            <option value="">-- Pilih Ekspedisi --</option>
+                            <option v-for="exp in availableEkspedisi" :key="exp" :value="exp">{{ exp }}</option>
+                        </select>
+                        <span v-if="formErrors.ekspedisi" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.ekspedisi }}</span>
+                    </div>
+
+                    <!-- PAKET BAHAN AJAR -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Paket Bahan Ajar *</label>
+                        <select v-model="selectedPaketKode" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">-- Pilih Paket Akademik --</option>
+                            <option v-for="pkt in packages" :key="pkt.kode" :value="pkt.kode">{{ pkt.kode }} - {{ pkt.nama }}</option>
+                        </select>
+                        <span v-if="formErrors.paket" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.paket }}</span>
+                    </div>
+
+                    <!-- DYNAMIC DETAIL PREVIEW (Renders automatically below select when selectedPaketKode is active) -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-accent/5 p-4 rounded-lg border-l-4 border-l-accent animate-in fade-in" v-if="selectedPaketDetails" >
+                        <h4 class="text-[10px] font-black text-slate-700 dark:text-amber-500 uppercase tracking-wider mb-2">
+                           Rincian & Komposisi Paket [{{ selectedPaketDetails.kode }}]
+                        </h4>
+                        <ul class="text-[11px] font-medium space-y-1.5 text-slate-600 dark:text-slate-300">
+                            <li v-for="(item, idx) in selectedPaketDetails.detail" :key="idx" class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[13px] text-emerald-500 font-bold">check_circle</span>
+                                {{ item }}
+                            </li>
+                        </ul>
+                        <div class="mt-3 text-[11px] font-black text-primary dark:text-white tracking-wide border-t dark:border-slate-800 pt-2 flex justify-between items-center">
+                            <span>TOTAL HARGA:</span>
+                            <span class="text-amber-600 dark:text-amber-400 text-sm font-mono">{{ formatToRupiah(selectedPaketDetails.harga) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- ALAMAT PENGIRIMAN -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Alamat Penerima Lengkap *</label>
+                        <textarea v-model="alamat" rows="2" placeholder="Masukkan alamat pengiriman selengkapnya ..." class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary"></textarea>
+                        <span v-if="formErrors.alamat" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ formErrors.alamat }}</span>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-primary hover:bg-blue-800 text-white font-black px-8 py-2.5 rounded shadow-md text-[10px] uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all">
+                            CREATE DELIVERY ORDER (DO)
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Search Section -->
+            <section class="card p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow">
+                <h2 class="text-xs font-black font-sans text-primary dark:text-secondary uppercase mb-6 flex items-center gap-2 tracking-widest">
+                    <span class="material-symbols-outlined text-accent">search</span>
+                    Lacak Pengiriman Delivery Order (DO) Aktif
+                </h2>
+                
+                <div class="flex flex-col sm:flex-row gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm font-mono">
+                    <input type="text" v-model="searchQuery" @keyup.enter="triggerSearch" placeholder="Masukkan No. DO (Contoh: DO2026-001)" class="flex-grow pl-4 py-2 bg-transparent outline-none font-bold text-primary dark:text-white placeholder:text-slate-400 text-xs uppercase">
+                    <button @click="triggerSearch" class="bg-primary hover:brightness-110 text-white px-8 py-2 rounded font-black text-xs uppercase tracking-widest transition-all">Cari DO</button>
+                </div>
+            </section>
+
+            <!-- Admin List Orders (ONLY SHOWN FOR OPERATORS/ADMINS) -->
+            <section v-if="userRole === 'Admin' || userRole === 'UPBJJ-UT' || userRole === 'Puslaba' || userRole === 'Fakultas' || userRole === 'Administrator'" class="space-y-4">
+                <div class="flex justify-between items-center mb-1">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Daftar Manifest Pengiriman Aktif</h3>
+                    <div class="flex gap-2">
+                        <select v-model="statusFilter" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded text-[10px] font-bold outline-none dark:text-white">
+                            <option value="">Semua Status Logistik</option>
+                            <option>Pending Approval</option>
+                            <option>Confirmed</option>
+                            <option>In Transit</option>
+                            <option>Delivered</option>
+                            <option>Finished</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div v-for="item in filteredOrders" :key="item.doNum" 
+                         @click="selectOrderCard(item)"
+                         class="card p-5 border-l-4 rounded-xl flex flex-col justify-between hover:border-accent dark:hover:border-accent transition-all cursor-pointer group shadow-sm bg-white dark:bg-slate-900 border"
+                         :class="{ 'border-l-primary': item.status === 'Pending Approval', 'border-l-indigo-500': item.status === 'In Transit', 'border-l-emerald-500': item.status === 'Finished' || item.status === 'Delivered', 'border-accent': selectedOrder && selectedOrder.doNum === item.doNum }">
+                        <div class="flex items-start gap-4">
+                            <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-primary dark:text-blue-400 group-hover:scale-105 transition-transform flex-shrink-0">
+                                <span class="material-symbols-outlined text-sm">local_shipping</span>
+                            </div>
+                            <div class="min-w-0 flex-grow">
+                                <p class="text-[9px] font-bold text-primary dark:text-blue-400 font-mono tracking-tight">{{ item.doNum }}</p>
+                                <p class="text-[11px] font-bold text-slate-800 dark:text-white uppercase truncate">{{ item.studentName }}</p>
+                                <p class="text-[9px] text-slate-450 font-medium font-mono uppercase mt-0.5 truncate">{{ item.moduleCode }} • UT {{ item.address.split('(')[1]?.replace(')', '') || '-' }}</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase text-right flex-shrink-0"
+                                  :class="{ 'bg-amber-100 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400': item.status === 'Pending Approval', 'bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400': item.status === 'Confirmed', 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400': item.status === 'In Transit', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400': item.status === 'Finished' || item.status === 'Delivered' }">
+                                {{ item.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Searched Order Results (Shown to both students and admins when an order is loaded) -->
+            <section v-if="selectedOrder" class="space-y-6 animate-in fade-in duration-300">
+                <div class="card p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors rounded-xl shadow-xl">
+                    
+                    <div class="space-y-4">
+                        <div class="border-b border-slate-100 dark:border-slate-800 pb-2 flex justify-between items-start">
+                            <div>
+                                <label class="text-[8px] text-slate-400 uppercase font-black tracking-widest block font-mono">No. Delivery Order</label>
+                                <h1 class="text-base font-black text-primary dark:text-accent font-mono tracking-tight">{{ selectedOrder.doNum }}</h1>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded text-[9px] font-black uppercase bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
+                                    {{ selectedOrder.status }}
+                                </span>
+                                <button v-if="userRole === 'Admin' || userRole === 'UPBJJ-UT' || userRole === 'Puslaba' || userRole === 'Fakultas' || userRole === 'Administrator'" @click="deleteActiveOrder" title="Hapus Order" class="text-slate-400 hover:text-red-650 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <label class="text-[8px] text-slate-400 uppercase font-black tracking-widest block">Nama Mahasiswa (NIM)</label>
+                            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase">{{ selectedOrder.studentName }}</h3>
+                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">NIM: {{ selectedOrder.nim }}</p>
+                        </div>
+
+                        <!-- Update Status logs by center operators (ONLY SHOWN TO ADMINS) -->
+                        <div v-if="userRole === 'Admin' || userRole === 'UPBJJ-UT' || userRole === 'Puslaba' || userRole === 'Fakultas' || userRole === 'Administrator'" class="space-y-2 py-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-lg border dark:border-slate-700">
+                            <label class="text-[9px] text-slate-505 uppercase font-black tracking-widest block text-yellow-600">Ubah Status Pengiriman (Operator UT)</label>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button @click="updateOrderStatus('Confirmed')" class="px-2.5 py-1 bg-white border dark:bg-slate-800 dark:text-white dark:border-slate-700 border-slate-200 text-[9px] font-black uppercase rounded hover:bg-primary hover:text-white transition-colors">Dikonfirmasi</button>
+                                <button @click="updateOrderStatus('In Transit')" class="px-2.5 py-1 bg-white border dark:bg-slate-800 dark:text-white dark:border-slate-700 border-slate-200 text-[9px] font-black uppercase rounded hover:bg-primary hover:text-white transition-colors">Transit/Kirim</button>
+                                <button @click="updateOrderStatus('Delivered')" class="px-2.5 py-1 bg-white border dark:bg-slate-800 dark:text-white dark:border-slate-700 border-slate-200 text-[9px] font-black uppercase rounded hover:bg-primary hover:text-white transition-colors">Sampai</button>
+                                <button @click="updateOrderStatus('Finished')" class="px-2.5 py-1 bg-white border dark:bg-slate-800 dark:text-white dark:border-slate-700 border-slate-200 text-[9px] font-black uppercase rounded hover:bg-primary hover:text-white transition-colors">Selesai/Doc</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                                <label class="text-[8px] text-slate-400 uppercase font-bold tracking-widest block font-sans">Ekspedisi Cargo</label>
+                                <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ selectedOrder.ekspedisi || 'Internal Courier' }}</div>
+                            </div>
+                            <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                                <label class="text-[8px] text-slate-400 uppercase font-bold tracking-widest block font-sans">Biaya Cetak / Harga</label>
+                                <div class="text-xs font-black text-amber-500">{{ selectedOrder.total || 'Free' }}</div>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-slate-100 dark:border-slate-800 pb-1">
+                            <label class="text-[8px] text-slate-400 uppercase font-bold tracking-widest block">Alamat Pengiriman Tujuan</label>
+                            <div class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">{{ selectedOrder.address }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress shipping charts -->
+                    <div class="space-y-5 flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 pt-6 md:pt-0 md:pl-6">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">Progress Pengiriman</h4>
+                            <span class="text-xs font-black text-green-600 dark:text-green-400">{{ trackingPercentage }}</span>
+                        </div>
+                        
+                        <!-- Track Line -->
+                        <div class="relative w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="absolute left-0 top-0 h-full bg-primary dark:bg-accent transition-all duration-500" :style="{ width: trackingPercentage }"></div>
+                        </div>
+                        
+                        <!-- Milestone list (Show matching description updates) -->
+                        <div class="space-y-5 relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-2">
+                            <div v-for="(step, i) in trackingMilestones" :key="i" class="flex items-start gap-4">
+                                <div class="mt-1 w-3 h-3 rounded-full bg-primary dark:bg-accent ring-4 ring-slate-150 dark:ring-slate-800 z-10 flex-shrink-0 animate-pulse"></div>
+                                <div>
+                                    <p class="text-xs font-bold leading-tight" :class="{ 'text-primary dark:text-accent': i === 0, 'text-slate-500 dark:text-slate-400': i !== 0 }">
+                                        {{ step.title }}
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-snug">{{ step.desc }}</p>
+                                    <p class="text-[9px] text-slate-400 font-mono tracking-tight uppercase mt-1">Waktu: {{ step.time }}</p>
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seek Prompt Empty state -->
+            <section v-else class="text-center py-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-dashed rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-[64px] text-slate-200 dark:text-slate-700">manage_search</span>
+                <p class="text-slate-400 dark:text-slate-550 text-xs font-black uppercase tracking-widest mt-4">Sila masukkan atau klik No. DO diatas/dari list untuk lacak pengiriman</p>
+            </section>
+        </main>
+    </div>
+
+    <!-- Active Toast Banner -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] transform transition-all duration-300 translate-y-20 opacity-0 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary">info</span>
+        <span id="toast-message" class="text-xs font-bold tracking-tight"></span>
+    </div>
+  </div>
+
+  <script src="js/dataBahanAjar.js"></script>
+  <script src="js/tracking-app.js"></script>
+</body>
+</html>

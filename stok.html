@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stok Bahan Ajar | Universitas Terbuka</title>
+    
+    <!-- Vue 3 and Tailwind CSS -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003d79',
+                        'primary-container': '#002b56',
+                        secondary: '#fdb913',
+                        'secondary-container': '#fdb913',
+                        accent: '#fdb913'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Public Sans', 'sans-serif'],
+                        body: ['Inter', 'Lexend', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-[#f8fafc] dark:bg-slate-950 font-body text-[#181c1e] dark:text-slate-100 min-h-screen flex flex-col md:flex-row transition-colors duration-300">
+
+  <div id="app" class="flex min-h-screen flex-col md:flex-row w-full">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar-menu" class="sidebar bg-primary dark:bg-slate-900 shadow-xl z-50 transition-colors duration-300">
+        <div class="p-6 border-b border-blue-900 bg-blue-950/20 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary font-black text-[10px] border-2 border-accent ut-logo-placeholder"></div>
+                <div>
+                    <div class="font-bold text-sm tracking-tight text-white sidebar-title">UT-Daerah</div>
+                    <div class="text-[10px] text-blue-300 font-bold uppercase tracking-widest leading-none mt-1">Logistik Bahan Ajar</div>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 py-6 px-4 space-y-1">
+            <button onclick="window.location.href='dashboard.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </button>
+            <button onclick="window.location.href='pesanan.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                Pesanan
+            </button>
+            <button id="nav-stok" onclick="window.location.href='stok.html'" class="w-full text-left p-3 bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-bold text-white border-l-4 border-accent">
+                <span class="material-symbols-outlined text-accent">inventory_2</span>
+                Informasi Stok
+            </button>
+            <button id="nav-tracking" onclick="window.location.href='tracking.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">local_shipping</span>
+                Tracking Pengiriman
+            </button>
+            <button id="nav-laporan" v-if="isAdmin" onclick="window.location.href='laporan.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">report_problem</span>
+                Laporan Masalah
+            </button>
+            <button id="nav-histori" v-if="isAdmin" onclick="window.location.href='histori.html'" class="w-full text-left p-3 hover:bg-blue-800/40 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium text-white opacity-80 hover:opacity-100">
+                <span class="material-symbols-outlined">history</span>
+                Histori Pengiriman
+            </button>
+        </nav>
+        <div class="p-4 border-t border-blue-900">
+            <button @click="logout" class="w-full p-2 bg-red-650/20 hover:bg-red-650 text-red-100 hover:text-white transition-all text-xs font-bold rounded flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                KELUAR
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Top Header -->
+    <header class="md:hidden flex h-16 bg-primary dark:bg-slate-900 justify-between items-center px-6 text-white border-b dark:border-slate-800">
+        <div class="flex items-center gap-2">
+            <img src="/assets/logo_ut.svg" alt="logo" class="h-6 w-6">
+            <span class="font-bold font-sans text-sm uppercase tracking-wider">UT Logistik</span>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="window.location.href='dashboard.html'" title="Home"><span class="material-symbols-outlined text-white">dashboard</span></button>
+            <button onclick="window.location.href='stok.html'" title="Stock" class="text-accent"><span class="material-symbols-outlined text-accent">inventory_2</span></button>
+            <button onclick="window.location.href='tracking.html'" title="Track"><span class="material-symbols-outlined text-white">local_shipping</span></button>
+        </div>
+    </header>
+
+    <div class="main-content flex flex-col min-h-screen flex-grow w-full overflow-x-hidden md:min-h-screen">
+        <!-- Header -->
+        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors">
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('sidebar-menu').classList.toggle('active')" class="md:hidden p-2 -ml-4">
+                    <span class="material-symbols-outlined text-slate-600 dark:text-slate-350">menu</span>
+                </button>
+                <div class="text-slate-700 dark:text-white font-black text-base font-sans uppercase tracking-wider">Informasi Stok Bahan Ajar</div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-4 ml-auto">
+                <!-- Notifications Box toggler -->
+                <div class="relative">
+                    <button @click="showNotifBox = !showNotifBox" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors relative" title="Notifikasi">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span v-if="notifications.length > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce"></span>
+                    </button>
+                    <!-- Notification Dropdown -->
+                    <div v-show="showNotifBox" class="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 shadow-2xl border border-slate-250 dark:border-slate-700 rounded-xl z-50 overflow-hidden" style="display: none;">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                            <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Notifikasi Aktivitas</span>
+                            <button @click="clearNotifications" class="text-[10px] text-blue-600 dark:text-accent font-bold hover:underline">Hapus Semua</button>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto p-4 space-y-3">
+                            <div v-if="notifications.length === 0" class="text-center py-6 text-slate-400">
+                                <span class="material-symbols-outlined text-3xl mb-1">notifications_off</span>
+                                <p class="text-[10px]">Belum ada notifikasi baru.</p>
+                            </div>
+                            <div v-for="(n, idx) in notifications" :key="idx" class="border-b dark:border-slate-700 pb-2 text-xs">
+                                <p class="text-slate-700 dark:text-slate-300 font-medium leading-snug">{{ n.text }}</p>
+                                <span class="text-[9px] text-slate-400 font-bold font-mono">{{ n.time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button @click="toggleTheme" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors" title="Ganti Tema">
+                    <span class="material-symbols-outlined">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+                </button>
+
+                <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block"></div>
+
+                <div class="flex items-center gap-3 pl-1">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-bold">{{ userName }}</p>
+                        <p class="text-[9px] text-yellow-650 dark:text-accent font-bold uppercase tracking-wider">{{ userRole }} Portal</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-accent text-primary flex items-center justify-center font-black text-sm ring-2 ring-white dark:ring-slate-800 shadow-sm transition-transform hover:scale-105 cursor-pointer">
+                        {{ userInitial }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 p-8 space-y-8">
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bento-card p-6 border-l-4 border-primary bg-white dark:bg-slate-900 shadow rounded-xl transition-transform hover:scale-[1.01]">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Jenis Modul</p>
+                    <h4 class="text-2xl font-black dark:text-white leading-none">{{ totalJenisModul }} item</h4>
+                </div>
+                <div class="bento-card p-6 border-l-4 border-amber-500 bg-white dark:bg-slate-900 shadow rounded-xl transition-transform hover:scale-[1.01]">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stok Menipis (Warning)</p>
+                    <h4 class="text-2xl font-black text-amber-600 dark:text-amber-400 leading-none">{{ totalStokMenipis }} item</h4>
+                </div>
+                <div class="bento-card p-6 border-l-4 border-red-500 bg-white dark:bg-slate-900 shadow rounded-xl transition-transform hover:scale-[1.01]">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stok Kosong</p>
+                    <h4 class="text-2xl font-black text-red-500 leading-none">{{ totalStokKosong }} item</h4>
+                </div>
+                <div class="bento-card p-6 border-l-4 border-emerald-500 bg-white dark:bg-slate-900 shadow rounded-xl transition-transform hover:scale-[1.01]">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Unit Tersedia</p>
+                    <h4 class="text-2xl font-black text-emerald-600 leading-none">{{ totalUnitTersedia.toLocaleString() }} pcs</h4>
+                </div>
+            </div>
+
+            <!-- Form Pendaftaran Bahan Ajar Baru (Validasi Otomatis) -->
+            <section id="add-stock-section" v-if="isAdmin">
+                <div class="card p-6 bg-white dark:bg-slate-900 dark:border-slate-800 transition-colors border border-slate-200 shadow-lg border-t-4 border-t-primary rounded-xl">
+                    <h3 class="text-xs font-black text-primary dark:text-secondary uppercase mb-4 flex items-center gap-2 tracking-widest">
+                        <span class="material-symbols-outlined text-sm">assignment_add</span>
+                        Tambah Modul Bahan Ajar Baru
+                    </h3>
+                    
+                    <form @submit.prevent="addNewStock" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- FOTO PRODUK/COVER -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Foto Cover Modul</label>
+                            <input type="file" id="foto" accept="image/*" @change="handleFileUpload" class="block w-full text-[10px] text-slate-500 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-white hover:file:opacity-90 cursor-pointer border border-slate-200 dark:border-slate-800 rounded bg-slate-50 dark:bg-slate-800/50">
+                        </div>
+                        
+                        <!-- KODE BARANG -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kode Mata Kuliah *</label>
+                            <input type="text" v-model="newKode" placeholder="Contoh: ASIP4301" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary uppercase">
+                            <span v-if="errors.kode" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ errors.kode }}</span>
+                        </div>
+                        
+                        <!-- NAMA/JUDUL BARANG -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nama Bahan Ajar *</label>
+                            <input type="text" v-model="newJudul" placeholder="Contoh: Pengelolaan Arsip Vital" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            <span v-if="errors.judul" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ errors.judul }}</span>
+                        </div>
+                        
+                        <!-- KATEGORI BARANG -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kategori Mata Kuliah</label>
+                            <select v-model="newKategori" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+
+                        <!-- UT DAERAH (UPBJJ) -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">UT-Daerah *</label>
+                            <select v-model="newUPBJJ" class="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                                <option value="" disabled>-- Pilih UT-Daerah --</option>
+                                <option v-for="u in upbjjs" :key="u.id" :value="u.id">{{ u.nama }}</option>
+                            </select>
+                            <span v-if="errors.upbjj" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ errors.upbjj }}</span>
+                        </div>
+
+                        <!-- LOKASI RAK -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lokasi Rak *</label>
+                            <input type="text" v-model="newLokasiRak" placeholder="Contoh: Rak G-02" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            <span v-if="errors.lokasiRak" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ errors.lokasiRak }}</span>
+                        </div>
+
+                        <!-- HARGA SATUAN -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Harga Satuan (IDR) *</label>
+                            <input type="number" v-model.number="newHarga" placeholder="Contoh: 45000" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            <span v-if="errors.harga" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ errors.harga }}</span>
+                        </div>
+
+                        <!-- STOK QTY & SAFETY -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Qty Stok & Safety limit *</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" v-model.number="newQty" placeholder="Qty" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                                <input type="number" v-model.number="newSafety" placeholder="Safety" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <span v-if="errors.qty" class="text-[9px] text-red-500 font-bold block">{{ errors.qty }}</span>
+                            <span v-if="errors.safety" class="text-[9px] text-red-500 font-bold block">{{ errors.safety }}</span>
+                        </div>
+
+                        <!-- CATATAN -->
+                        <div class="sm:col-span-2 lg:col-span-4 space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Catatan Spesifikasi Khusus</label>
+                            <input type="text" v-model="newCatatan" placeholder="Contoh: Cover <strong>revisi ketiga</strong>, cetakan kertas koran." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+
+                        <div class="sm:col-span-2 lg:col-span-4 flex justify-end pt-2">
+                            <button type="submit" class="bg-primary hover:bg-blue-850 text-white font-black px-8 py-2.5 rounded shadow-md text-[10px] uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all">
+                                🚀 TAMBAHKAN DATA BAHAN AJAR
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Table and Filters container -->
+            <div class="card overflow-hidden flex flex-col bg-white dark:bg-slate-900 dark:border-slate-800 transition-colors border border-slate-200 shadow-xl rounded-xl">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex flex-col space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <h3 class="text-sm font-black font-sans text-primary dark:text-secondary uppercase">Daftar Inventori Modul UT</h3>
+                        <button @click="resetFilters" class="px-3 py-1 bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 rounded text-[9px] font-black uppercase tracking-widest transition-all shadow-sm">
+                            ↺ RESET SARINGAN
+                        </button>
+                    </div>
+
+                    <!-- Filter Area Layout -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+                        <!-- Search input -->
+                        <div class="space-y-1 col-span-1 lg:col-span-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-400">Pencarian Kata Kunci</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-450 dark:text-slate-500 text-xs">search</span>
+                                <input type="text" v-model="filterSearch" placeholder="Cari kode / judul..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded text-[10px] outline-none">
+                            </div>
+                        </div>
+
+                        <!-- UT Daerah Filter -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-400">UT-Daerah (UPBJJ)</label>
+                            <select v-model="filterUPBJJ" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-[10px] outline-none dark:text-white">
+                                <option value="">Semua UT-Daerah</option>
+                                <option v-for="u in upbjjs" :key="u.id" :value="u.id">{{ u.nama }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Kategori Filter (DEPENDENT FILTER: Only renders if filterUPBJJ is active!) -->
+                        <div class="space-y-1 transition-all duration-300 transform scale-100 origin-top" v-if="filterUPBJJ">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-amber-500 font-bold animate-pulse">Kategori (Dependent: UT {{ filterUPBJJ }})</label>
+                            <select v-model="filterKategori" class="w-full bg-white dark:bg-slate-800 border border-amber-500 rounded px-2.5 py-1.5 text-[10px] outline-none dark:text-white">
+                                <option value="">Semua Kategori</option>
+                                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Sorting selectors -->
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-400">Penyortiran</label>
+                            <div class="flex gap-1">
+                                <select v-model="sortBy" class="flex-grow bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 text-[10px] outline-none dark:text-white">
+                                    <option value="judul">Judul </option>
+                                    <option value="stock">Stok Qty</option>
+                                    <option value="harga">Harga</option>
+                                </select>
+                                <select v-model="sortOrder" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1.5 text-[10px] outline-none dark:text-white">
+                                    <option value="asc">▲</option>
+                                    <option value="desc">▼</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Low Stock Toggle -->
+                        <div class="flex items-center gap-2 pt-4 pl-1 col-span-1">
+                            <input type="checkbox" id="lowStockToggle" v-model="filterLowStockOnly" class="w-4 h-4 rounded border-amber-350 text-amber-500 focus:ring-amber-400">
+                            <label for="lowStockToggle" class="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 cursor-pointer">⚠️ Reorder Alert (Stok &lt; Safety / Kosong)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table Content -->
+                <div class="flex-grow overflow-x-auto custom-scrollbar bg-white dark:bg-slate-900 min-h-[400px]">
+                    <table class="w-full text-left text-xs bg-white dark:bg-slate-900">
+                        <thead class="bg-white dark:bg-slate-905 sticky top-0 uppercase text-[9px] font-black tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-850 z-20 shadow-sm transition-colors">
+                            <tr>
+                                <th class="px-6 py-4">Cover</th>
+                                <th class="px-6 py-4">Kode / Judul</th>
+                                <th class="px-6 py-4">Kategori</th>
+                                <th class="px-6 py-4">UT-Daerah</th>
+                                <th class="px-6 py-4">Lokasi Rak</th>
+                                <th class="px-6 py-4 text-center">Stok Qty</th>
+                                <th class="px-6 py-4 text-center">Safety Stock</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4">Catatan</th>
+                                <th class="px-6 py-4 text-right" v-if="isAdmin">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tr v-if="filteredAndSortedStocks.length === 0" class="bg-white dark:bg-slate-900">
+                                <td :colspan="isAdmin ? 10 : 9" class="text-center py-20 text-slate-400 italic font-medium uppercase text-[10px] tracking-widest">
+                                    Tidak ada data modul bahan ajar yang sesuai dengan saringan aktif.
+                                </td>
+                            </tr>
+                            <tr v-for="item in filteredAndSortedStocks" :key="item.kode" class="bg-white dark:bg-slate-900 border-b dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors">
+                                <!-- Col 1: Gambar Cover -->
+                                <td class="px-6 py-4">
+                                    <img v-if="item.foto" :src="item.foto" class="h-10 w-10 object-cover rounded shadow" alt="cover">
+                                    <div v-else class="h-10 w-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-[8px] font-bold">NO COVER</div>
+                                </td>
+                                <!-- Col 2: Kode / Judul / Harga -->
+                                <td class="px-6 py-4 font-bold">
+                                    <div class="text-primary dark:text-blue-400 text-xs font-mono font-black">{{ item.kode }}</div>
+                                    <div class="text-slate-800 dark:text-white font-sans text-xs mt-0.5">{{ item.judul }}</div>
+                                    <div class="text-[9px] text-slate-400 uppercase font-black font-mono tracking-tighter mt-1">{{ formatToRupiah(item.harga) }}</div>
+                                </td>
+                                <!-- Col 3: Kategori -->
+                                <td class="px-6 py-4 text-slate-500 font-bold uppercase text-[9px]">{{ item.Kategori }}</td>
+                                <!-- Col 4: UT-Daerah -->
+                                <td class="px-6 py-4 font-bold text-slate-600 dark:text-slate-300">UT {{ item.upbjj }}</td>
+                                <!-- Col 5: Lokasi Rak -->
+                                <td class="px-6 py-4 font-black text-slate-500 dark:text-slate-400 font-mono text-[10px]">{{ item.lokasiRak || '-' }}</td>
+                                <!-- Col 6: Stok Qty (Status Highlights) -->
+                                <td class="px-6 py-4 text-center font-black text-sm" :class="{ 'text-emerald-600': isAman(item), 'text-amber-500': isMenipis(item), 'text-red-500 animate-pulse': isKosong(item) }">
+                                    {{ item.qty.toLocaleString() }}
+                                </td>
+                                <!-- Col 7: Safety Stock -->
+                                <td class="px-6 py-4 text-center font-bold text-slate-400 dark:text-slate-500 font-mono text-[10px]">{{ item.safety }}</td>
+                                <!-- Col 8: Status Signifiers -->
+                                <td class="px-6 py-4 text-center">
+                                    <span v-if="isAman(item)" class="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-green-500/10 text-emerald-600">✔ Aman</span>
+                                    <span v-else-if="isMenipis(item)" class="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-amber-500/10 text-amber-500">⚠ Menipis</span>
+                                    <span v-else class="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-red-505/10 text-red-500 bg-red-500/10 animate-pulse">✖ Kosong</span>
+                                </td>
+                                <!-- Col 9: Catatan HTML -->
+                                <td class="px-6 py-4 text-slate-500 font-medium text-[10px]" v-html="item.catatanHTML"></td>
+                                <!-- Col 10: Aksi -->
+                                <td class="px-6 py-4 text-right" v-if="isAdmin">
+                                    <div class="flex justify-end gap-1.5">
+                                        <button @click="openEditModal(item)" class="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-accent transition-colors" title="Edit Modul">
+                                            <span class="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button @click="deleteStock(item.kode)" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors" title="Urungkan / Hapus">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-820 text-center">
+                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        TOTAL REKOR BAHAN AJAR: {{ filteredAndSortedStocks.length }} / {{ stocks.length }} item
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal Structure -->
+    <div v-show="showEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all duration-300" style="display: none;">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800 animate-in zoom-in duration-200">
+            <h3 class="text-sm font-black text-primary dark:text-secondary uppercase mb-4 flex items-center gap-2 pb-2 border-b dark:border-slate-800">
+                <span class="material-symbols-outlined">edit_note</span>
+                Edit Detail Bahan Ajar
+            </h3>
+            
+            <form @submit.prevent="saveEdit" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unggah Cover Baru</label>
+                    <input type="file" @change="handleEditImageUpload" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-primary file:text-white cursor-pointer">
+                    <img v-if="editItem.foto" :src="editItem.foto" alt="preview" class="mt-2 h-14 w-14 object-cover rounded shadow-md border border-slate-200">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kode Barang</label>
+                        <input type="text" :value="editItem.kode" disabled class="w-full bg-slate-100 dark:bg-slate-800/80 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-slate-400 font-bold uppercase cursor-not-allowed">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Harga (IDR) *</label>
+                        <input type="number" v-model.number="editItem.harga" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white">
+                        <span v-if="editErrors.harga" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ editErrors.harga }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Judul Barang *</label>
+                    <input type="text" v-model="editItem.judul" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white">
+                    <span v-if="editErrors.judul" class="text-[9px] text-red-550 font-bold block mt-0.5">{{ editErrors.judul }}</span>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lokasi Rak *</label>
+                    <input type="text" v-model="editItem.lokasiRak" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white uppercase">
+                    <span v-if="editErrors.lokasiRak" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ editErrors.lokasiRak }}</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Jumlah Stok *</label>
+                        <input type="number" v-model.number="editItem.qty" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white">
+                        <span v-if="editErrors.qty" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ editErrors.qty }}</span>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Safety Limit *</label>
+                        <input type="number" v-model.number="editItem.safety" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white">
+                        <span v-if="editErrors.safety" class="text-[9px] text-red-500 font-bold block mt-0.5">{{ editErrors.safety }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Catatan Khusus</label>
+                    <input type="text" v-model="editItem.catatanHTML" class="w-full bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 px-3 py-1.5 text-xs rounded dark:text-white">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" @click="closeEditModal" class="flex-grow py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors uppercase tracking-wider">BATAL</button>
+                    <button type="submit" class="flex-grow py-2.5 text-xs font-black bg-primary text-white rounded shadow hover:brightness-105 uppercase tracking-wider">SIMPAN PERUBAHAN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] transform transition-all duration-300 translate-y-20 opacity-0 bg-slate-800 dark:bg-slate-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary">info</span>
+        <span id="toast-message" class="text-xs font-bold tracking-tight"></span>
+    </div>
+  </div>
+
+  <!-- Load Assets Scripts -->
+  <script src="js/dataBahanAjar.js"></script>
+  <script src="js/stok-app.js"></script>
+</body>
+</html>

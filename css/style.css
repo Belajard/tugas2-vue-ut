@@ -1,0 +1,81 @@
+/* custom scrollbars */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
+/* Animation triggers */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .75;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* General Layout adjustments */
+img {
+  max-width: 100%;
+}
+
+/* Responsive sidebar styling */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -280px; /* Hidden offscreen on mobile by default */
+  width: 260px;
+  height: 100vh;
+  display: flex !important;
+  flex-direction: column;
+  transition: left 0.3s ease-in-out;
+  z-index: 100;
+}
+
+.sidebar.active {
+  left: 0 !important; /* Sliding into view on mobile when active is added */
+}
+
+/* Sticky sidebar style on desktop - overrides mobile styles to be fully stationary */
+@media (min-width: 768px) {
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0 !important;
+    width: 256px; /* w-64 */
+    height: 100vh;
+    display: flex !important;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  .main-content {
+    margin-left: 256px !important;
+    width: calc(100% - 256px) !important;
+  }
+}
