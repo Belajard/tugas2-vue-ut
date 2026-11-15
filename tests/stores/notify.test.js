@@ -17,3 +17,14 @@ describe('notify store', () => {
     expect(n.visible).toBe(false)
   })
 })
+
+describe('notify store: daftar notifikasi', () => {
+  it('addNotification menaruh yang terbaru di depan; clearNotifications mengosongkan', () => {
+    const n = useNotifyStore()
+    n.addNotification('satu')
+    n.addNotification('dua')
+    expect(n.notifications.map((x) => x.text)).toEqual(['dua', 'satu'])
+    n.clearNotifications()
+    expect(n.notifications).toEqual([])
+  })
+})
